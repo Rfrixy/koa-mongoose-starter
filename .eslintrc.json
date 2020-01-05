@@ -1,0 +1,37 @@
+{
+  "extends": [
+    "airbnb-base",
+    "plugin:node/recommended"
+  ],
+  "plugins": [
+    "json-format"
+  ],
+  "env": {
+    "node": true,
+    "browser": false
+  },
+  "rules": {
+    "guard-for-in": "off",
+    "strict": "off",
+    "no-process-exit":"off",
+    "indent": ["error", 2, { "SwitchCase": 1, "VariableDeclarator": 1 }],
+    "no-restricted-syntax": "off",
+    "no-await-in-loop": "off",
+    "no-underscore-dangle": "off",
+    "no-restricted-globals": "off",
+    "no-empty": "off",
+    "no-continue": "off",
+    "no-param-reassign": "off",
+    "operator-linebreak": ["error", "after"],
+    "quotes": ["error", "single"],
+    "func-names": "off",
+    "max-len": ["error", {"code": 200}],
+    "comma-dangle": ["error", {
+      "arrays": "always-multiline",
+      "objects": "always-multiline",
+      "imports": "always-multiline",
+      "exports": "always-multiline",
+      "functions": "ignore"
+    }]
+  }
+}
