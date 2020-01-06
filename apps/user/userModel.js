@@ -11,7 +11,7 @@ const schema = new mongoose.Schema({
   name: String,
   email: DbPresets.indexedEmailType,
   password: DbPresets.requiredPasswordType,
-  apiKey: String,
+  apiKey: { type: String, required: true, index: true },
 });
 
 schema.pre('save', function pwdMod(next) {
@@ -39,6 +39,5 @@ schema.methods.comparePassword = async function comparePassword(passw) {
 };
 
 schema.plugin(uniqueValidator);
-
 
 exports.User = new mongoose.Model(schema);
