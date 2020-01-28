@@ -6,11 +6,9 @@ const { MiscUtils, DbPresets } = require('../../utils');
 
 
 const schema = new mongoose.Schema({
-  firstName: DbPresets.requiredStringFunction(50, 2),
-  lastName: DbPresets.stringFunction(50, 0),
-  name: String,
-  email: DbPresets.indexedEmailType,
-  password: DbPresets.requiredPasswordType,
+  name: DbPresets.requiredString,
+  email: DbPresets.indexedEmail,
+  password: DbPresets.requiredPassword,
   apiKey: { type: String, required: true, index: true },
 });
 
@@ -40,4 +38,4 @@ schema.methods.comparePassword = async function comparePassword(passw) {
 
 schema.plugin(uniqueValidator);
 
-exports.User = new mongoose.Model(schema);
+module.exports = new mongoose.Model(schema);

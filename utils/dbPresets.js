@@ -17,7 +17,7 @@ const requiredStringFunction = (maxlen = 500, minlen = 0) => ({
 });
 
 
-const requiredStringType = {
+const requiredString = {
   type: String,
   required: true,
 };
@@ -39,26 +39,26 @@ const requiredEmail = {
   required: true,
 };
 
-const indexedEmailType = {
+const indexedEmail = {
   ...Email,
   unique: true,
   required: [true, 'can\'t be blank'],
   index: true,
 };
 
-const requiredPasswordType = {
+const requiredPassword = {
   type: String,
   required: true,
   match: [/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{6,}$/, 'Atleast 6 characters long and must contain one uppercase letter, one lowercase letter and one digit'],
 };
 
 module.exports = {
-  requiredStringType,
+  requiredString,
   Url,
   Email,
   requiredEmail,
-  indexedEmailType,
-  requiredPasswordType,
+  indexedEmail,
+  requiredPassword,
   stringFunction,
   requiredStringFunction,
 };
