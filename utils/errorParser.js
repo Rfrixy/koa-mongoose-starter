@@ -1,6 +1,52 @@
 const _ = require('lodash');
 const { Error } = require('mongoose');
-const { CustomError, logger } = require('../../common');
+const { CustomError, logger } = require('../utils');
+
+
+/**
+ // removes duplicate paths from errors
+ * example :
+  "errors": {
+    "clickParams[subparam1][values][3]": "# is not allowed",
+    "clickParams[subparam1]": "Validation failed: values.3: # is not allowed",
+    "clickParams": "Validation failed: subparam1.values.3: # is not allowed, subparam1: Validation failed: values.3: # is not allowed"
+  }
+  should become ---
+    "errors": {
+    "clickParams": "Validation failed: subparam1.values.3: # is not allowed, subparam1: Validation failed: values.3: # is not allowed"
+  }
+ */
+function removeDuplicates(errors) {
+  const _errors = { ...errors };
+  const paths = _.orderBy(_.keys(errors), (error) => error);
+  const deletePaths = [];
+  for (let i = 0; i < paths.length - 1; i += 1) {
+    if (_.includes(paths[i + 1], paths[i])) { deletePaths.push(paths[i]); }
+  }
+  for (const path of deletePaths) delete _errors[path];
+  return _errors;
+}
+
+
+/**
+ // removes last index from errors (for the sake of front end)
+ * example :
+  "errors": {
+    "clickParams[subparam1][values][3]": "# is not allowed",
+  }
+  should become ---
+  "errors": {
+    "clickParams[subparam1][values]": "# is not allowed",
+  }
+ */
+function removeLastIndex(errors) {
+  const _errors = {};
+  for (const key of _.keys(errors)) {
+    const re = new RegExp(/\[[0-9]+\]$/);
+    _errors[key.replace(re, '')] = errors[key];
+  }
+  return _errors;
+}
 
 function parser(err) {
   if (!err || !err.message) {
@@ -47,22 +93,18 @@ function parser(err) {
     errors = removeLastIndex(errors);
     response.errors = errors;
     response.errorCode = 400;
-  }
-  // https://github.com/Automattic/mongoose/issues/5354#issuecomment-321998181
-  else if (err instanceof Error.CastError) {
+  } else if (err instanceof Error.CastError) {
+    // https://github.com/Automattic/mongoose/issues/5354#issuecomment-321998181
     response.error = `${err.stringValue} is not a valid ${err.kind} for "${err.path}"`;
     response.errorCode = 400;
-  }
-  else if (err instanceof CustomError) {
+  } else if (err instanceof CustomError) {
     response.errorCode = err.statusCode;
     if (_.isPlainObject(err.error)) {
       response.errors = err.error;
-    }
-    else {
+    } else {
       response.error = err.message;
     }
-  }
-  else {
+  } else {
     // ctx.throw errors
     if (err.status) {
       response.errorCode = err.status;
@@ -70,52 +112,6 @@ function parser(err) {
     response.error = err.message;
   }
   return response;
-}
-
-
-/**
- // removes duplicate paths from errors
- * example :
-  "errors": {
-    "clickParams[subparam1][values][3]": "# is not allowed",
-    "clickParams[subparam1]": "Validation failed: values.3: # is not allowed",
-    "clickParams": "Validation failed: subparam1.values.3: # is not allowed, subparam1: Validation failed: values.3: # is not allowed"
-  }
-  should become ---
-    "errors": {
-    "clickParams": "Validation failed: subparam1.values.3: # is not allowed, subparam1: Validation failed: values.3: # is not allowed"
-  }
- */
-function removeDuplicates(errors) {
-  const _errors = { ...errors };
-  const paths = _.orderBy(_.keys(errors), (error) => error);
-  const deletePaths = [];
-  for (let i = 0; i < paths.length - 1; i += 1) {
-    if (_.includes(paths[i + 1], paths[i])) { deletePaths.push(paths[i]); }
-  }
-  for (const path of deletePaths) delete _errors[path];
-  return _errors;
-}
-
-
-/**
- // removes last index from errors (for the sake of front end)
- * example :
-  "errors": {
-    "clickParams[subparam1][values][3]": "# is not allowed",
-  }
-  should become ---
-  "errors": {
-    "clickParams[subparam1][values]": "# is not allowed",
-  }
- */
-function removeLastIndex(errors) {
-  const _errors = {};
-  for (const key of _.keys(errors)) {
-    const re = new RegExp(/\[[0-9]+\]$/);
-    _errors[key.replace(re, '')] = errors[key];
-  }
-  return _errors;
 }
 
 

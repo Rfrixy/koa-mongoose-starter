@@ -1,5 +1,4 @@
 const fs = require('fs');
-const AdmZip = require('adm-zip');
 const cfg = require('@smpx/cfg');
 
 function mkdir(dir) {
@@ -14,10 +13,6 @@ function mvFile(source, dest) {
   fs.renameSync(source, dest);
 }
 
-async function extractZip(path, dirPath) {
-  const zip = new AdmZip(path);
-  await zip.extractAllTo(dirPath, true);
-}
 
 function getsubdirPath(team, type = 'images') {
   const d = new Date();
@@ -61,7 +56,6 @@ function writeJSONFile(fileName, obj) {
 module.exports = {
   mkdir,
   mvFile,
-  extractZip,
   deleteFolderRecursive,
   getsubdirPath,
   readJSONFile,
