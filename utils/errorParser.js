@@ -1,5 +1,76 @@
 const _ = require('lodash');
-const { CustomError, logger } = require('.');
+const { Error } = require('mongoose');
+const { CustomError, logger } = require('../../common');
+
+function parser(err) {
+  if (!err || !err.message) {
+    logger.error({ err: new Error('parseError called without any error or an error without a message') });
+    return {
+      status: 2,
+      errorCode: 500,
+      error: 'Unknown Error',
+    };
+  }
+  const response = { status: 2, errorCode: 500 };
+  if (err instanceof Error.ValidationError) {
+    let errors = {};
+    for (const field in err.errors) {
+      let path = field;
+      path = path.replace(/\.(.+?)(?=\.|$)/g, (m, s) => `[${s}]`); // converts dot notation to square brackets, e.g. a.b becomes a[b]
+      const { value } = err.errors[field];
+      // const reason = err.errors[field].reason;
+      const { message } = err.errors[field];
+      if (message) errors[path] = message;
+      else {
+        switch (err.errors[field].kind) {
+          case 'required':
+            errors[path] = `${path} is required`;
+            break;
+          case 'enum':
+            errors[path] = `${value} is invalid`;
+            break;
+          case 'regexp':
+            errors[path] = `${value} is invalid`;
+            break;
+          case 'invalid':
+            errors[path] = `${value} is invalid`;
+            break;
+          case 'unique':
+            errors[path] = `${value} already exists`;
+            break;
+          default:
+            errors[path] = `invalid ${path}`;
+        }
+      }
+    }
+    errors = removeDuplicates(errors);
+    errors = removeLastIndex(errors);
+    response.errors = errors;
+    response.errorCode = 400;
+  }
+  // https://github.com/Automattic/mongoose/issues/5354#issuecomment-321998181
+  else if (err instanceof Error.CastError) {
+    response.error = `${err.stringValue} is not a valid ${err.kind} for "${err.path}"`;
+    response.errorCode = 400;
+  }
+  else if (err instanceof CustomError) {
+    response.errorCode = err.statusCode;
+    if (_.isPlainObject(err.error)) {
+      response.errors = err.error;
+    }
+    else {
+      response.error = err.message;
+    }
+  }
+  else {
+    // ctx.throw errors
+    if (err.status) {
+      response.errorCode = err.status;
+    }
+    response.error = err.message;
+  }
+  return response;
+}
 
 
 /**
@@ -45,65 +116,6 @@ function removeLastIndex(errors) {
     _errors[key.replace(re, '')] = errors[key];
   }
   return _errors;
-}
-
-
-function parser(err) {
-  if (!err || !err.message) {
-    logger.error({ err: new Error('parseError called without any error or an error without a message') });
-    return {
-      status: 2,
-      errorCode: 500,
-      error: 'Unknown Error',
-    };
-  }
-  const response = { status: 2, errorCode: 500 };
-  if (err.name === 'ValidationError') {
-    let errors = {};
-    for (const field in err.errors) {
-      let path = field;
-      path = path.replace(/\.(.+?)(?=\.|$)/g, (m, s) => `[${s}]`); // converts dot notation to square brackets, e.g. a.b becomes a[b]
-      const { value } = err.errors[field];
-      // const reason = err.errors[field].reason;
-      const { message } = err.errors[field];
-      if (message) errors[path] = message;
-      else {
-        switch (err.errors[field].kind) {
-          case 'required':
-            errors[path] = `${path} is required`;
-            break;
-          case 'enum':
-            errors[path] = `${value} is invalid`;
-            break;
-          case 'regexp':
-            errors[path] = `${value} is invalid`;
-            break;
-          case 'invalid':
-            errors[path] = `${value} is invalid`;
-            break;
-          case 'unique':
-            errors[path] = `${value} already exists`;
-            break;
-          default:
-            errors[path] = `invalid ${path}`;
-        }
-      }
-    }
-    errors = removeDuplicates(errors);
-    errors = removeLastIndex(errors);
-    response.errors = errors;
-    response.errorCode = 400;
-  } else if (err instanceof CustomError) {
-    response.errorCode = err.statusCode;
-    if (_.isPlainObject(err.error)) {
-      response.errors = err.error;
-    } else {
-      response.error = err.message;
-    }
-  } else {
-    response.error = err.message;
-  }
-  return response;
 }
 
 
