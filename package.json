@@ -2,7 +2,16 @@
   "name": "koa-mongoose-starter",
   "version": "1.0.0",
   "description": "",
+  "keywords": [],
+  "license": "ISC",
+  "author": "",
   "main": "config.js",
+  "scripts": {
+    "lint": "eslint . --ignore-path .gitignore --ext .js,.json",
+    "lint:fix": "npm run lint -- --fix",
+    "start": "node server.js",
+    "test": "npm run lint"
+  },
   "dependencies": {
     "@koa/cors": "^3.0.0",
     "@smpx/cfg": "^1.2.2",
@@ -23,18 +32,11 @@
     "eslint": "^6.8.0",
     "eslint-config-airbnb-base": "^14.0.0",
     "eslint-plugin-import": "^2.19.1",
+    "eslint-plugin-json-format": "^2.0.1",
     "eslint-plugin-mocha": "^6.2.2",
-    "eslint-plugin-node": "^10.0.0",
-    "eslint-plugin-json-format": "^2.0.1"
-  },
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js"
+    "eslint-plugin-node": "^10.0.0"
   },
   "engines": {
     "node": ">=10.16.0"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC"
+  }
 }
